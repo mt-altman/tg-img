@@ -42,6 +42,23 @@ export async function POST(request) {
 	let newformData = new FormData();
 	newformData.append("chat_id", env.TG_CHAT_ID);
 	newformData.append(fileTypevalue, formData.get('file'));
+	
+	console.log("--- Preparing to send request to Telegram ---");
+	console.log("Request URL:", up_url);
+	console.log("File Type Value (form key):", fileTypevalue);
+
+	// 遍历并打印 FormData 的内容
+	const formDataEntries = {};
+	for (const [key, value] of newformData.entries()) {
+		if (value instanceof File || value instanceof Blob) {
+			// 对于文件对象，只打印元数据，不打印内容
+			formDataEntries[key] = `File(name=${value.name}, size=${value.size}, type=${value.type})`;
+		} else {
+			formDataEntries[key] = value;
+		}
+	}
+	console.log("FormData Content:", JSON.stringify(formDataEntries));
+	console.log("--- End of request logging ---");
 
 	try {
 		const res_img = await fetch(up_url, {
