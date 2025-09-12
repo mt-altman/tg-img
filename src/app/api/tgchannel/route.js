@@ -55,7 +55,20 @@ export async function POST(request) {
 
 		let responseData = await res_img.json();
 		const fileData = await getFile(responseData);
-
+		if (!fileData) {
+			// 如果 fileData 为 null，说明上传到 Telegram 失败
+			// 记录详细的失败信息，并返回一个明确的错误
+			console.error("Failed to upload to Telegram. API Response:", JSON.stringify(responseData));
+			return Response.json({
+				status: 500,
+				message: `Failed to upload file to Telegram.`,
+				success: false,
+				telegram_response: responseData // 将 Telegram 的原始响应返回，方便调试
+			}, {
+				status: 500,
+				headers: corsHeaders,
+			});
+		}
 		const data = {
 			"url": `${req_url.origin}/api/cfile/${fileData.file_id}`,
 			"code": 200,
@@ -93,8 +106,7 @@ export async function POST(request) {
 
 			} catch (error) {
 				console.log(error);
-				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, nowTime);
-
+				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, -1, "unknown_time");
 
 				return Response.json({
 					"msg": error.message
@@ -111,6 +123,8 @@ export async function POST(request) {
 
 
 	} catch (error) {
+		console.error("An unexpected error occurred in the POST handler:", error); // 增加日志记录
+
 		return Response.json({
 			status: 500,
 			message: ` ${error.message}`,
